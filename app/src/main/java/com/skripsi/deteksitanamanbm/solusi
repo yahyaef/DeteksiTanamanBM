@@ -1,0 +1,219 @@
+package com.skripsi.deteksitanamanbm
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import java.io.BufferedReader
+import java.io.InputStreamReader
+
+class TampilanSolusi :ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val label = intent.getStringExtra("label") ?: ""
+        setContent {
+            SolusiScreen(label)
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SolusiScreen(label: String) {
+    val context = LocalContext.current
+    var solusiText by remember { mutableStateOf("Memuat solusi...") }
+
+    // Membaca file solusi.txt berdasarkan label
+    LaunchedEffect(label) {
+        if (label.isBlank()) {
+            solusiText = "Label penyakit tidak tersedia."
+            return@LaunchedEffect
+        }
+        try {
+            val inputStream = context.assets.open("solusion.txt")
+            val reader = BufferedReader(InputStreamReader(inputStream))
+            var line: String?
+            var found = false
+            val stringBuilder = StringBuilder()
+
+            while (reader.readLine().also { line = it } != null) {
+                if (line!!.startsWith(label, ignoreCase = true)) {
+                    found = true
+                    stringBuilder.appendLine(line!!.substringAfter(":").trim())
+                } else if (found && line!!.isNotBlank() && !line!!.contains(":")) {
+                    stringBuilder.appendLine(line!!.trim())
+                } else if (found && line!!.contains(":")) {
+                    break
+                }
+            }
+
+            solusiText = if (stringBuilder.isNotEmpty()) {
+                stringBuilder.toString()
+            } else {
+                "Solusi untuk '$label' tidak ditemukan."
+            }
+
+            reader.close()
+            inputStream.close()
+        } catch (e: Exception) {
+            solusiText = "Terjadi kesalahan saat membaca file solusi: ${e.message}"
+        }
+    }
+
+    // UI tampilan
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text("Solusi Pengendalian", fontWeight = FontWeight.Bold)
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFF00ACC1),
+                    titleContentColor = Color.White
+                )
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                .padding(16.dp)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.Start
+        ) {
+            Text(
+                text = "Penyakit: $label",
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF007C91)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Card(
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFFE0F7FA)
+                ),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "Solusi:",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF004D40)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = solusiText,
+                        fontSize = 16.sp,
+                        color = Color.Black
+                    )
+                }
+            }
+        }
+    }
+}
+
+
+package com.skripsi.deteksitanamanbm
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.font.FontWeight
+
+class TampilanSolusi : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        val label = intent.getStringExtra("label") ?: "Tidak Diketahui"
+        val solusi = intent.getStringExtra("solusi") ?: "Solusi tidak tersedia."
+
+        setContent {
+            SolusiTampilanScreen(label = label, solusi = solusi)
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SolusiTampilanScreen(label: String, solusi: String) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text("Solusi Pengendalian", fontWeight = FontWeight.Bold)
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFF00ACC1),
+                    titleContentColor = Color.White
+                )
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                .padding(16.dp)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.Start
+        ) {
+            Text(
+                text = "Penyakit: $label",
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF007C91)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFE0F7FA))
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "Solusi:",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF004D40)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = solusi,
+                        fontSize = 16.sp,
+                        color = Color.Black
+                    )
+                }
+            }
+        }
+    }
+}
